@@ -39,13 +39,18 @@ public class StockVH extends RecyclerView.ViewHolder {
     public void bindItem(Message msg) {
         titleMsgTv.setText(msg.title);
         summaryTv.setText(msg.summary);
-
+        linearLayout.removeAllViews();
 //        stockOneTv.setText(getString(msg, 0));
 //        stockTwoTv.setText(getString(msg, 1));
 //        stockThreeTv.setText(getString(msg, 2));
 
         for (int i = 0; i < msg.stocks.size(); i++) {
             TextView textView = newTextView();
+            if(msg.stocks.get(i).px_change_rate.contains("-")){
+                textView.setCompoundDrawablesWithIntrinsicBounds(R.mipmap.ic_stock_down, 0, 0, 0);
+            }else{
+                textView.setCompoundDrawablesWithIntrinsicBounds(R.mipmap.ic_stock_up, 0, 0, 0);
+            }
             textView.setText(getString(msg, i));
             linearLayout.addView(textView);
         }
@@ -54,7 +59,6 @@ public class StockVH extends RecyclerView.ViewHolder {
 
     private TextView newTextView() {
         TextView textView = new TextView(linearLayout.getContext());
-        textView.setCompoundDrawablesWithIntrinsicBounds(R.mipmap.ic_stock_down, 0, 0, 0);
         int dpi = (int) textView.getResources().getDisplayMetrics().density;
         textView.setCompoundDrawablePadding(5*dpi);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-2, -2);
@@ -66,8 +70,9 @@ public class StockVH extends RecyclerView.ViewHolder {
     @NonNull
     private String getString(Message msg, int index) {
         logStockChangeInfo(msg, index);
-        return linearLayout.getContext().getString(R.string.stock_name_rate, msg.stocks
-                .get(index).name, msg.stocks.get(index).px_change_rate);
+       return String.format("%s%.5s",msg.stocks.get(index).name,msg.stocks.get(index).px_change_rate)+"%";
+//        return linearLayout.getContext().getString(R.string.stock_name_rate, msg.stocks
+//                .get(index).name, msg.stocks.get(index).px_change_rate);
     }
 
     private void logStockChangeInfo(Message msg, int index) {
