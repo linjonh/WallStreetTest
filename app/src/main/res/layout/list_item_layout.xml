@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="10dp">
+    <TextView
+        android:id="@+id/massage_tv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="国外禽流感爆发，祖蛋鸡引种再次低于计划，鸡价上涨就买这三只"
+        android:textSize="18sp"/>
+    <TextView
+        android:id="@+id/summary_tv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="今日重要性：✨✨✨"/>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:fillViewport="false"
+        android:layout_marginTop="10dp">
+        <LinearLayout
+            android:id="@+id/stocks_ll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+    <!--        <TextView
+                android:id="@+id/stock_one_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableLeft="@mipmap/ic_stock_down"
+                android:drawablePadding="5dp"
+                android:text="湖南黄金"
+            />
+            <TextView
+                android:id="@+id/stock_two_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableLeft="@mipmap/ic_stock_down"
+                android:drawablePadding="5dp"
+                android:text="湖南黄金"
+            />
+            <TextView
+                android:id="@+id/stock_three_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableLeft="@mipmap/ic_stock_down"
+                android:drawablePadding="5dp"
+                android:text="湖南黄金"
+            />-->
+        </LinearLayout>
+    </HorizontalScrollView>
+</LinearLayout>

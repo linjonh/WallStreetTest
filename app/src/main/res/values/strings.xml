@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">WallStreet</string>
+    <string name="stock_name_rate">%1$s%2$s\%</string>
+</resources>
