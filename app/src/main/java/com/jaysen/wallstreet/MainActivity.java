@@ -1,8 +1,13 @@
 package com.jaysen.wallstreet;
 
 import android.app.LoaderManager;
+import android.content.ComponentName;
+import android.content.Intent;
 import android.content.Loader;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -15,7 +20,7 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<ArrayList<Message>> {
 
     private static final String TAG = "MainActivity";
-    private RecyclerView         mRecyclerView;
+    private RecyclerView mRecyclerView;
     private StockRecyclerAdapter mAdapter;
 
     @Override
@@ -36,6 +41,21 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         super.onResume();
 //        getLoaderManager().destroyLoader(0);
 //        getLoaderManager().restartLoader(0, null, this);
+        Intent intent = new Intent(this, UpdateService.class);
+        bindService(intent, mConnection, 0);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unbindService(mConnection);
+        if (mIRemoteService != null) {
+            try {
+                mIRemoteService.getData();
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -60,5 +80,16 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         Log.i(TAG, "onLoaderReset");
     }
 
+    IStockAidlInterface mIRemoteService;
+    private ServiceConnection mConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            mIRemoteService = IStockAidlInterface.Stub.asInterface(service);
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            Log.e(TAG, "Service has unexpectedly disconnected");
+            mIRemoteService = null;
+        }
+    };
 
 }
