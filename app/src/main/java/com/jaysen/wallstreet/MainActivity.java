@@ -10,7 +10,7 @@ import android.content.IntentFilter;
 import android.content.Loader;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
@@ -22,24 +22,26 @@ import java.util.Calendar;
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<ArrayList<Message>> {
 
     private static final String TAG = "MainActivity";
-    private RecyclerView         mRecyclerView;
     private StockRecyclerAdapter mAdapter;
     private UpdateReceiver       mUpdateReceiver;
     private AlarmManager         mAlarmManager;
     private PendingIntent        mPendingIntent;
+    private StockAsyncTask       mTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mRecyclerView = (RecyclerView) findViewById(R.id.main_rv);
+        RecyclerView mRecyclerView = (RecyclerView) findViewById(R.id.main_rv);
         mAdapter = new StockRecyclerAdapter();
-        mRecyclerView
-                .setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+//        mRecyclerView
+//                .setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        mRecyclerView.setLayoutManager(new GridLayoutManager(this, 1));
         mRecyclerView.setAdapter(mAdapter);
+        mRecyclerView.setHasFixedSize(true);
 //        getLoaderManager().initLoader(0, null, this);
-        new StockAsyncTask(this, mAdapter).execute();
-        setAlarm();
+        mTask = new StockAsyncTask(this, mAdapter);
+        mTask.execute();
     }
 
     @Override
@@ -47,34 +49,31 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         super.onResume();
 //        getLoaderManager().destroyLoader(0);
 //        getLoaderManager().restartLoader(0, null, this);
-
-//        Intent intent = new Intent(this, UpdateService.class);
-//        bindService(intent, mConnection, 0);
         if (mUpdateReceiver == null) {
             mUpdateReceiver = new UpdateReceiver();
         }
         registerReceiver(mUpdateReceiver, new IntentFilter(UPDATE_ACTION));
+        setAlarm();
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mUpdateReceiver);
+        mAlarmManager.cancel(mPendingIntent);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-//        unbindService(mConnection);
-//        if (mIRemoteService != null) {
-//            try {
-//                mIRemoteService.getData();
-//            } catch (RemoteException e) {
-//                e.printStackTrace();
-//            }
-//        }
-
-        unregisterReceiver(mUpdateReceiver);
+        mTask.releaseAllRequest();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mAlarmManager.cancel();
+
     }
 
     @Override
@@ -99,28 +98,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         Log.i(TAG, "onLoaderReset");
     }
 
-//    IStockAidlInterface mIRemoteService;
-//    private ServiceConnection mConnection = new ServiceConnection() {
-//        public void onServiceConnected(ComponentName className, IBinder service) {
-//            mIRemoteService = IStockAidlInterface.Stub.asInterface(service);
-//        }
-//
-//        public void onServiceDisconnected(ComponentName className) {
-//            Log.e(TAG, "Service has unexpectedly disconnected");
-//            mIRemoteService = null;
-//        }
-//    };
-
-
-//    JobScheduler jobScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
-//
-//    private void startJobScheduler() {
-//        JobInfo jobInfo = new JobInfo.Builder(0, new ComponentName(this, UpdateService.class))
-//                .setPeriodic(60 * 1000)
-//                .build();
-//        jobScheduler.schedule(jobInfo);
-//    }
-
     public static final String UPDATE_ACTION = MainActivity.class.getPackage() + "_UPDATE_ACTION";
 
     class UpdateReceiver extends BroadcastReceiver {
@@ -129,7 +106,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         public void onReceive(Context context, Intent intent) {
             Log.i(TAG, "UpdateReceiver onReceive");
             if (intent.getAction().equals(UPDATE_ACTION)) {
-                new StockAsyncTask(context, mAdapter).execute();
+                mTask = new StockAsyncTask(context, mAdapter);
+                mTask.execute();
             }
         }
     }
