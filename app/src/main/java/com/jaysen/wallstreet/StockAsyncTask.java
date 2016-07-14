@@ -1,5 +1,6 @@
 package com.jaysen.wallstreet;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -40,11 +41,14 @@ public class StockAsyncTask extends AsyncTask<Void, Void, ArrayList<Message>> {
     private Context mContext;
     RequestQueue mRequestQueue;
     public static final String TAG = "StockAsyncTask";
+    private ProgressDialog mProgressDialog;
 
     public StockAsyncTask(Context context, StockRecyclerAdapter adapter) {
         mAdapter = adapter;
         mContext = context;
         mRequestQueue = Volley.newRequestQueue(mContext);
+        mProgressDialog = new ProgressDialog(context);
+        mProgressDialog.show();
     }
 
     @Override
@@ -55,25 +59,28 @@ public class StockAsyncTask extends AsyncTask<Void, Void, ArrayList<Message>> {
     @Override
     protected void onPostExecute(ArrayList<Message> messages) {
         super.onPostExecute(messages);
-        mAdapter.setmDatasets(messages);
+        mProgressDialog.hide();
+        if (mAdapter != null) {
+            mAdapter.setmDatasets(messages);
+        }
     }
 
     private ArrayList<Message> getMessages() {
         ArrayList<Message> dataList = null;
         try {
-            InputStream is = mContext.getAssets().open("data.json");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            StringBuilder builder = new StringBuilder();
-            String tmp;
+            InputStream    is      = mContext.getAssets().open("data.json");
+            BufferedReader reader  = new BufferedReader(new InputStreamReader(is));
+            StringBuilder  builder = new StringBuilder();
+            String         tmp;
             while ((tmp = reader.readLine()) != null) {
                 builder.append(tmp);
             }
             JSONObject jsonObject = new JSONObject(builder.toString());
-            JSONArray array = jsonObject.getJSONArray("Messages");
+            JSONArray  array      = jsonObject.getJSONArray("Messages");
             dataList = new ArrayList<>();
             final ArrayList<String> en_prod_codeList = new ArrayList<>();
             for (int i = 0; i < array.length(); i++) {
-                Message message = new Message();
+                Message    message  = new Message();
                 JSONObject itemData = array.getJSONObject(i);
                 message.title = itemData.getString("Title");
                 message.summary = itemData.getString("Summary");
@@ -84,7 +91,7 @@ public class StockAsyncTask extends AsyncTask<Void, Void, ArrayList<Message>> {
                 message.stocks = new ArrayList<>();
                 String en_prod_code = "";
                 for (int j = 0; j < stocks.length(); j++) {
-                    Stock stock = new Stock();
+                    Stock      stock     = new Stock();
                     JSONObject stockItem = stocks.getJSONObject(j);
                     stock.name = stockItem.getString("Name");
                     stock.symbol = stockItem.getString("Symbol");
@@ -94,15 +101,16 @@ public class StockAsyncTask extends AsyncTask<Void, Void, ArrayList<Message>> {
                 dataList.add(message);
                 en_prod_codeList.add(en_prod_code);
             }
-            final CountDownLatch countDownLatch = new CountDownLatch(dataList.size());
-            ThreadPoolExecutor executor = new ThreadPoolExecutor(4, 8, 1, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
-            final ArrayList<Message> finalDataList = dataList;
+            final CountDownLatch     countDownLatch = new CountDownLatch(dataList.size());
+            ThreadPoolExecutor       executor       = new ThreadPoolExecutor(4, 8, 1, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+            final ArrayList<Message> finalDataList  = dataList;
             for (int i = 0; i < dataList.size(); i++) {
                 final int finalI = i;
                 executor.execute(new Runnable() {
                     @Override
                     public void run() {
-                        requestStockRate(finalDataList.get(finalI), en_prod_codeList.get(finalI), countDownLatch);
+                        requestStockRate(finalDataList.get(finalI), en_prod_codeList
+                                .get(finalI), countDownLatch);
                     }
                 });
             }
